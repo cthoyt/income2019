@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""
+"""Desktop GUI for ``table_validator``.
 
 Author: Wolfgang Müller
 The initial starting point was taken from zetcode
 However, there are only few lines that survived changes.
-
 
 -
 ZetCode PyQt5 tutorial
@@ -32,6 +31,11 @@ import table_validator
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    'ValidationDropTarget',
+    'main',
+]
+
 
 class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
@@ -54,11 +58,11 @@ class ValidationDropTarget(QWidget):
     def _validate_table(self, candidate) -> bool:
         return table_validator.validate(self.template, candidate)
 
-    # overloading the drop event
-    def dropEvent(self, e):
+    def dropEvent(self, e):  # noqa: N802
+        """Handle file drop events."""
         logger.debug("Dropped!")
         urls = e.mimeData().urls()
-        response = urllib.request.urlopen(urls[0].toString())
+        response = urllib.request.urlopen(urls[0].toString())  # noqa:S310
         candidate = table_validator.parse_tsv(response.read().decode("UTF-8").split("\n"))
 
         logger.debug("Candidate %s" % candidate)
@@ -66,7 +70,7 @@ class ValidationDropTarget(QWidget):
         self.labelUrl.setText("File examined: %s" % urls[0].toString())
 
         if self._validate_table(candidate):
-            self.labelSuccess.setText(
+            self.label_success.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
         else:
             self.labelSuccess.setText(
@@ -74,9 +78,8 @@ class ValidationDropTarget(QWidget):
 
         logger.debug("dropped" % urls)
 
-    # a method for acceptance checks based
-    # on the mime type of the thing dragged
-    def isAccepted(self, e):
+    def is_accepted(self, e):
+        """Check a file based on its MIME type."""
         accept = any(
             e.mimeData().hasFormat(i)
             for i in self.accepted_formats
@@ -87,14 +90,12 @@ class ValidationDropTarget(QWidget):
         else:
             e.ignore()
 
-    # when you enter a drop zone
-    # then this function decides if you can drop
-    # this type of file
-    def dragEnterEvent(self, e):
+    def dragEnterEvent(self, e):  # noqa: N802
+        """Decide if you can drop a given type of file in the drop zone."""
         logger.debug("enter")
         logger.debug(f'URLs: {e.mimeData().urls()}')
 
-        accept = self.isAccepted(e)
+        accept = self.is_accepted(e)
         if accept:
             logger.debug("Accepted")
         else:
@@ -143,13 +144,12 @@ class ValidationDropTarget(QWidget):
         <p>
         <b>Note:</b> Currently we process only <b>tab delimited</b> files.
         </p>
-
         """)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self.labelUrl)
-        vbox.addWidget(self.labelSuccess)
-        vbox.addWidget(self.labelInstructions)
+        vbox.addWidget(self.label_url)
+        vbox.addWidget(self.label_success)
+        vbox.addWidget(self.label_instructions)
         vbox.addStretch()
 
         self.setLayout(vbox)
