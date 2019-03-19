@@ -22,9 +22,9 @@ http://zetcode.com/gui/pyqt5/dragdrop/
 """
 
 import logging
-import sys
 import urllib.request
 
+import click
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
@@ -54,12 +54,12 @@ class ValidationDropTarget(QWidget):
 
     # overloading the drop event
     def dropEvent(self, e):
-        print("Dropped!")
+        logger.debug("Dropped!")
         urls = e.mimeData().urls()
         response = urllib.request.urlopen(urls[0].toString())
         candidate = table_validator.parse_tsv(response.read().decode("UTF-8").split("\n"))
 
-        print("Candidate %s" % candidate)
+        logger.debug("Candidate %s" % candidate)
 
         self.labelUrl.setText(urls[0].toString())
 
@@ -68,9 +68,9 @@ class ValidationDropTarget(QWidget):
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
         else:
             self.labelSuccess.setText(
-                '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation failed!</span>')
+                '<span style=" font-size:18pt; font-weight:600; color:#8B0000;">Validation failed!</span>')
 
-        print("dropped" % urls)
+        logger.debug("dropped" % urls)
 
     # a method for acceptance checks based
     # on the mime type of the thing dragged
@@ -89,14 +89,14 @@ class ValidationDropTarget(QWidget):
     # then this function decides if you can drop
     # this type of file
     def dragEnterEvent(self, e):
-        print("enter")
-        print(e.mimeData().urls())
+        logger.debug("enter")
+        logger.debug(f'URLs: {e.mimeData().urls()}')
 
         accept = self.isAccepted(e)
         if accept:
-            print("Accepted")
+            logger.debug("Accepted")
         else:
-            print("failed %s" % e.mimeData().formats())
+            logger.debug("failed %s" % e.mimeData().formats())
 
     # initUI
     def initUI(self):
@@ -131,10 +131,18 @@ class ValidationDropTarget(QWidget):
         self.setGeometry(800, 500, 300, 400)
 
 
-def main():
-    app = QApplication(sys.argv)
-    with open('../../../tests/simple_candidate.tsv') as file:
-        drop_target = ValidationDropTarget(file)
+@click.command()
+@click.option('-t', '--template', type=click.File(), default='template.tsv')
+@click.option('-v', '--verbose', is_flag=True)
+def main(template, verbose: bool):
+    """Run the table_validator Desktop App."""
+    if verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+
+    click.echo(f'Building table validator with {template.name}')
+    app = QApplication([])
+    drop_target = ValidationDropTarget(template)
     drop_target.show()
     app.exec_()
 
