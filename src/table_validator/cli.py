@@ -9,6 +9,10 @@ import click
 
 from table_validator.api import parse_tsv, validate
 
+__all__ = [
+    'main',
+]
+
 
 @click.command()
 @click.argument('template', type=click.File())
