@@ -2,24 +2,32 @@
 
 """Use tables with validation schemata to validate other tables."""
 
+import sys
 from typing import TextIO
 
 import click
-import pandas as pd
 
-from table_validator.api import parse_template
+from table_validator.api import validate
 
 
 @click.command()
 @click.argument('template', type=click.File())
-@click.option('-c', '--candidate', type=click.File())
+@click.argument('candidate', type=click.File())
 def main(template: TextIO, candidate: TextIO):
     """Validate tables with other tables."""
-    click.echo(f'Template: {template.name}')
-    df = pd.read_csv(template, sep='\t', header=None)
+    template = _parse_tsv(template)
+    candidate = _parse_tsv(candidate)
 
-    template = df.values
-    list(parse_template(template))
+    if validate(template, candidate):
+        click.secho('valid', fg='green', bold=True)
+        sys.exit(0)
+    else:
+        click.secho('invalid', fg='red')
+        sys.exit(-1)
 
-    if candidate:
-        click.echo(f'Candidate: {candidate.name}')
+
+def _parse_tsv(file):
+    return [
+        list(line.strip().split('\t'))
+        for line in file
+    ]
