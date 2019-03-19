@@ -44,6 +44,7 @@ def parse_template(template) -> Iterable[Tuple[Validator, int, int]]:
                     (required_validator, i, j),
                     (int_validator, i, j),
                 ]
+            #elif command.startswith('STAR')
 
 
 def required_validator(candidate: List[List[Any]], row: int, column: int) -> bool:
@@ -83,3 +84,9 @@ def validate(template: List[List[Any]], candidate: List[List[Any]]) -> bool:
             print(f'failed at ({i}, {j}, {candidate[i][j]}: {validator}')
             passed = False
     return passed
+
+def parse_tsv(file):
+    return [
+        list(line.strip().split('\t'))
+        for line in file
+    ]
