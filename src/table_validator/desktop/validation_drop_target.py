@@ -117,11 +117,24 @@ class ValidationDropTarget(QWidget):
         self.labelInstructions = QLabel()
         self.labelInstructions.setAlignment(Qt.AlignLeft)
         self.labelInstructions.setText("""
-        Just <b>drag and drop</b> your files here to check if they match the format
-        as agreed with your colleague<p>
+        <p>
+        Are you asking yourself if your tabular data file is really matching
+        the template you agreed on with your collaboration partners?
+        <p>
+        Then this tool is the solution for you. Just take this file in your
+        file manager (finder, windows explorer, nautilus...) and then
+        <b> drop it</b> onto this window.
+        <p>
+        We will check the format compliance of your file and immediately
+        give
+        <ul>
+        <li> information if it is correct with respect to the template
+        <li> give information on where it is incorrect
+        </ul>
 
-        Currently we process only <b>tab delimited</b> files.
-
+        <p>
+        <b>Note:</b> Currently we process only <b>tab delimited</b> files.
+        </p>
 
         """)
 
