@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""Web interface for ``table_validator``."""
+
 import logging
 import os
 
-from flask import Flask, flash, render_template
+from flask import Flask, current_app, flash, render_template
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
@@ -14,9 +16,6 @@ from table_validator.api import parse_tsv, validate
 
 logger = logging.getLogger(__name__)
 
-with open('/Users/cthoyt/dev/income2019/tests/simple_template.tsv') as file:
-    template = parse_tsv(file)
-
 
 class MyForm(FlaskForm):
     """A form for uploading a file."""
@@ -25,8 +24,9 @@ class MyForm(FlaskForm):
     submit = SubmitField('Upload')
 
     def validate_table_template(self) -> bool:
+        """Validate the file against the table template in the current app."""
         candidate = parse_tsv(self.candidate.data.stream.read().decode("utf-8").splitlines())
-        return validate(template, candidate)
+        return validate(current_app.config['table_template'], candidate)
 
 
 app = Flask(__name__)
@@ -38,7 +38,10 @@ Bootstrap(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    """Serve the home page."""
+    """Serve the upload page."""
+    if 'table_template' not in app.config:
+        raise ValueError('``table_template`` is not configured')
+
     form = MyForm()
 
     if not form.validate_on_submit():
@@ -47,7 +50,3 @@ def home():
     valid = form.validate_table_template()
     flash(f'Form is valid: {valid}')
     return render_template('index.html', form=form)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
