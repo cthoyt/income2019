@@ -36,10 +36,12 @@ logger = logging.getLogger(__name__)
 class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
 
-    def __init__(self, template_file):
+    def __init__(self, template_file,bottom,right):
         # self.labelUrl = 0;
         super().__init__()
 
+        self.bottom = bottom
+        self.right = right
         self.setAcceptDrops(True)
         self.initUI()
 
@@ -61,14 +63,14 @@ class ValidationDropTarget(QWidget):
 
         logger.debug("Candidate %s" % candidate)
 
-        self.labelUrl.setText(urls[0].toString())
+        self.labelUrl.setText("File examined: %s" % urls[0].toString())
 
         if self._validate_table(candidate):
             self.labelSuccess.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
         else:
             self.labelSuccess.setText(
-                '<span style=" font-size:18pt; font-weight:600; color:#8B0000;">Validation failed!</span>')
+                '<span style=" font-size:18pt; font-weight:600; color:#cc0000;">Your data surely is great, but...</span>')
 
         logger.debug("dropped" % urls)
 
@@ -100,16 +102,28 @@ class ValidationDropTarget(QWidget):
 
     # initUI
     def initUI(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setGeometry(self.right-300,self.bottom-300,300,300)
+        self.setFixedSize(300,300)
+        print(self.right-300)
+        print(self.bottom-300)
+
+        # https://stackoverflow.com/questions/18975734/how-can-i-find-the-screen-desktop-size-in-qt-so-i-can-display-a-desktop-notific
+
+
+
         self.labelUrl = QLabel()
         self.labelUrl.setAlignment(Qt.AlignLeft)
+        self.labelUrl.setWordWrap(True);
         self.labelUrl.setText("Drop your files here:")
 
         self.labelSuccess = QLabel()
         self.labelSuccess.setAlignment(Qt.AlignLeft)
-        self.labelSuccess.setText("Not analyzed, yet!")
+        self.labelSuccess.setText('<span style="color:#999999;">I did not yet analyze any file</span>')
 
         self.labelInstructions = QLabel()
         self.labelInstructions.setAlignment(Qt.AlignLeft)
+        self.labelInstructions.setWordWrap(True)
         self.labelInstructions.setText("""
         <p>
         Are you asking yourself if your tabular data file is really matching
@@ -141,7 +155,7 @@ class ValidationDropTarget(QWidget):
         self.setLayout(vbox)
 
         self.setWindowTitle('INCOME table Validation Drop Target')
-        self.setGeometry(800, 500, 300, 400)
+        #self.setGeometry(800, 500, 300, 400)
 
 
 @click.command()
@@ -155,7 +169,13 @@ def main(template, verbose: bool):
 
     click.echo(f'Building table validator with {template.name}')
     app = QApplication([])
-    drop_target = ValidationDropTarget(template)
+
+    desktop = app.desktop();
+    geometry = desktop.availableGeometry()
+    bottom = geometry.bottom()
+    right = geometry.right()
+
+    drop_target = ValidationDropTarget(template,bottom,right)
     drop_target.show()
     app.exec_()
 
