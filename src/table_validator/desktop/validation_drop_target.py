@@ -41,7 +41,7 @@ class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
 
     def __init__(self, template_file,bottom,right):
-        # self.labelUrl = 0;
+        # self.label_url = 0;
         super().__init__()
 
         self.bottom = bottom
@@ -67,13 +67,13 @@ class ValidationDropTarget(QWidget):
 
         logger.debug("Candidate %s" % candidate)
 
-        self.labelUrl.setText("File examined: %s" % urls[0].toString())
+        self.label_url.setText("File examined: %s" % urls[0].toString())
 
         if self._validate_table(candidate):
             self.label_success.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
         else:
-            self.labelSuccess.setText(
+            self.label_success.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#cc0000;">Your data surely is great, but...</span>')
 
         logger.debug("dropped" % urls)
@@ -89,6 +89,9 @@ class ValidationDropTarget(QWidget):
             e.accept()
         else:
             e.ignore()
+
+    def hoverEvent(self,e):
+        print("hovering")
 
     def dragEnterEvent(self, e):  # noqa: N802
         """Decide if you can drop a given type of file in the drop zone."""
@@ -113,19 +116,19 @@ class ValidationDropTarget(QWidget):
 
 
 
-        self.labelUrl = QLabel()
-        self.labelUrl.setAlignment(Qt.AlignLeft)
-        self.labelUrl.setWordWrap(True);
-        self.labelUrl.setText("Drop your files here:")
+        self.label_url = QLabel()
+        self.label_url.setAlignment(Qt.AlignLeft)
+        self.label_url.setWordWrap(True);
+        self.label_url.setText("Drop your files here:")
 
-        self.labelSuccess = QLabel()
-        self.labelSuccess.setAlignment(Qt.AlignLeft)
-        self.labelSuccess.setText('<span style="color:#999999;">I did not yet analyze any file</span>')
+        self.label_success = QLabel()
+        self.label_success.setAlignment(Qt.AlignLeft)
+        self.label_success.setText('<span style="color:#999999;">I did not yet analyze any file</span>')
 
-        self.labelInstructions = QLabel()
-        self.labelInstructions.setAlignment(Qt.AlignLeft)
-        self.labelInstructions.setWordWrap(True)
-        self.labelInstructions.setText("""
+        self.label_instructions = QLabel()
+        self.label_instructions.setAlignment(Qt.AlignLeft)
+        self.label_instructions.setWordWrap(True)
+        self.label_instructions.setText("""
         <p>
         Are you asking yourself if your tabular data file is really matching
         the template you agreed on with your collaboration partners?
@@ -151,6 +154,12 @@ class ValidationDropTarget(QWidget):
         vbox.addWidget(self.label_success)
         vbox.addWidget(self.label_instructions)
         vbox.addStretch()
+
+        #animation = new QPropertyAnimation(this, "size");
+        #animation->setDuration(150);
+        # animation->setStartValue(QSize(width, window_height_min));
+        #animation->setEndValue(QSize(width, window_height_min+expand_general_to));
+        #animation->start();
 
         self.setLayout(vbox)
 
