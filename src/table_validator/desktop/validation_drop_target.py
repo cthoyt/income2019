@@ -24,7 +24,7 @@ import logging
 import urllib.request
 
 import click
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,QRect, QPropertyAnimation
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 import table_validator
@@ -40,13 +40,15 @@ __all__ = [
 class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
 
-    def __init__(self, template_file,bottom,right):
+    def __init__(self, app,template_file,bottom,right):
         # self.label_url = 0;
         super().__init__()
 
+        self.app = app;
         self.bottom = bottom
         self.right = right
         self.setAcceptDrops(True)
+        print(dir(self))
         self.initUI()
 
         self.template = table_validator.parse_tsv(template_file)
@@ -58,9 +60,57 @@ class ValidationDropTarget(QWidget):
     def _validate_table(self, candidate) -> bool:
         return table_validator.validate(self.template, candidate)
 
+    def _big_geometry(self):
+        w = 30
+        h = 30
+        x = self.right - w
+        y = self.bottom - h
+
+        big_w = 300
+        big_h = 300
+        big_x = self.right - big_w
+        big_y = self.bottom - big_h
+
+        if(self.x() < x) and (self.y() < y):
+            print("""already big""")
+            return
+
+
+        self.animation = QPropertyAnimation(self, b"geometry")
+        self.animation.setDuration(250)
+        self.animation.setStartValue(QRect(x,y,w,h))
+        self.animation.setEndValue(QRect(big_x,big_y,big_w,big_h))
+        self.animation.start();
+        self.setFixedSize(big_w,big_h)
+
+
+    def _small_geometry(self):
+        w = 30
+        h = 30
+        x = self.right - w
+        y = self.bottom - h
+
+        big_w = 300
+        big_h = 300
+        big_x = self.right - big_w
+        big_y = self.bottom - big_h
+
+        if(self.x() == x) and (self.y() == y):
+            print("""already small""")
+            return
+
+        self.animation = QPropertyAnimation(self, b"geometry")
+        self.animation.setDuration(250)
+        self.animation.setStartValue(QRect(big_x,big_y,big_w,big_h))
+        self.animation.setEndValue(QRect(x,y,w,h))
+        self.animation.start();
+        self.setFixedSize(big_w,big_h)
+
     def dropEvent(self, e):  # noqa: N802
         """Handle file drop events."""
         logger.debug("Dropped!")
+
+
         urls = e.mimeData().urls()
         response = urllib.request.urlopen(urls[0].toString())  # noqa:S310
         candidate = table_validator.parse_tsv(response.read().decode("UTF-8").split("\n"))
@@ -77,6 +127,7 @@ class ValidationDropTarget(QWidget):
                 '<span style=" font-size:18pt; font-weight:600; color:#cc0000;">Your data surely is great, but...</span>')
 
         logger.debug("dropped" % urls)
+        #self._small_geometry();
 
     def is_accepted(self, e):
         """Check a file based on its MIME type."""
@@ -90,11 +141,21 @@ class ValidationDropTarget(QWidget):
         else:
             e.ignore()
 
-    def hoverEvent(self,e):
-        print("hovering")
+
+
+
+
+    def enterEvent(self,e):
+        self._big_geometry()
+
+    def leaveEvent(self,e):
+        self._small_geometry();
 
     def dragEnterEvent(self, e):  # noqa: N802
         """Decide if you can drop a given type of file in the drop zone."""
+
+        self._big_geometry();
+
         logger.debug("enter")
         logger.debug(f'URLs: {e.mimeData().urls()}')
 
@@ -104,14 +165,11 @@ class ValidationDropTarget(QWidget):
         else:
             logger.debug("failed %s" % e.mimeData().formats())
 
+
     # initUI
     def initUI(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setGeometry(self.right-300,self.bottom-300,300,300)
-        self.setFixedSize(300,300)
-        print(self.right-300)
-        print(self.bottom-300)
-
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self._small_geometry()
         # https://stackoverflow.com/questions/18975734/how-can-i-find-the-screen-desktop-size-in-qt-so-i-can-display-a-desktop-notific
 
 
@@ -155,11 +213,7 @@ class ValidationDropTarget(QWidget):
         vbox.addWidget(self.label_instructions)
         vbox.addStretch()
 
-        #animation = new QPropertyAnimation(this, "size");
-        #animation->setDuration(150);
-        # animation->setStartValue(QSize(width, window_height_min));
-        #animation->setEndValue(QSize(width, window_height_min+expand_general_to));
-        #animation->start();
+
 
         self.setLayout(vbox)
 
@@ -184,7 +238,7 @@ def main(template, verbose: bool):
     bottom = geometry.bottom()
     right = geometry.right()
 
-    drop_target = ValidationDropTarget(template,bottom,right)
+    drop_target = ValidationDropTarget(app,template,bottom,right)
     drop_target.show()
     app.exec_()
 
