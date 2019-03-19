@@ -9,8 +9,8 @@ from table_validator.web.app import app
 
 
 @click.command()
-@click.option('--template', type=click.File(), required=True)
+@click.option('--template', type=click.File(), default='template.tsv')
 def main(template):
     """Run the web interface for the table validator."""
     app.config['table_template'] = parse_tsv(template)
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
