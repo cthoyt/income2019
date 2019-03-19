@@ -34,11 +34,10 @@ def parse_template(template) -> Iterable[Tuple[Validator, int, int]]:
 
             close_bracket = cell.find('}', open_bracket)
             if -1 == close_bracket:
-                print('ERROR: no right bracket')
-                continue
+                raise ValueError(f'ERROR in {i}, {j} {cell}: no right bracket')
 
             command = cell[open_bracket + 1: close_bracket]
-            print(f'{EMOJI} command at ({i}, {j}): {command}')
+            logger.debug(f'{EMOJI} command at ({i}, {j}): {command}')
 
             if command.startswith('INT'):
                 yield [
@@ -56,6 +55,7 @@ def required_validator(candidate: List[List[Any]], row: int, column: int) -> boo
 def type_validator(candidate: List[List[Any]], row: int, column: int, cls: type) -> bool:
     """Validate a cell for having the given type."""
     value = candidate[row][column]
+
     try:
         cls(value)
     except ValueError:
