@@ -7,7 +7,7 @@ from typing import TextIO
 
 import click
 
-from table_validator.api import parse_tsv, validate
+from table_validator import TemplateValidator
 
 __all__ = [
     'main',
@@ -19,10 +19,8 @@ __all__ = [
 @click.argument('candidate', type=click.File())
 def main(template: TextIO, candidate: TextIO):
     """Validate tables with other tables."""
-    template = parse_tsv(template)
-    candidate = parse_tsv(candidate)
-
-    if validate(template, candidate):
+    validator = TemplateValidator(template)
+    if validator.validate(candidate):
         click.secho('valid', fg='green', bold=True)
         sys.exit(0)
     else:

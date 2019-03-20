@@ -26,7 +26,7 @@ class MyForm(FlaskForm):
     def validate_table_template(self) -> bool:
         """Validate the file against the table template in the current app."""
         candidate = parse_tsv(self.candidate.data.stream.read().decode("utf-8").splitlines())
-        return validate(current_app.config['table_template'], candidate)
+        return current_app.config['table_validator'].validate(candidate)
 
 
 app = Flask(__name__)

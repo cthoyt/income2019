@@ -6,7 +6,7 @@ from typing import TextIO
 
 import click
 
-from table_validator.api import parse_tsv
+from table_validator.api import TemplateValidator
 from table_validator.web.app import app
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
 @click.option('--debug', is_flag=True)
 def main(template: TextIO, host: str, port: int, debug: bool):
     """Run the web interface for the table validator."""
-    app.config['table_template'] = parse_tsv(template)
+    app.config['table_validator'] = TemplateValidator(template)
     app.run(debug=debug, host=host, port=port)

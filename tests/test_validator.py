@@ -5,7 +5,7 @@
 import unittest
 from typing import Any, List
 
-from table_validator import validate
+from table_validator import validate, TemplateValidator
 
 
 class TableValidatorMixin(unittest.TestCase):
@@ -13,13 +13,18 @@ class TableValidatorMixin(unittest.TestCase):
 
     TEMPLATE: List[List[Any]]
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.validator = TemplateValidator(cls.TEMPLATE)
+
     def assertValidCandidate(self, candidate: List[List[Any]], msg=None):  # noqa:N802
         """Assert that the given candidate passes validation against the template."""
-        self.assertTrue(validate(self.TEMPLATE, candidate), msg=msg)
+        self.assertTrue(self.validator.validate(candidate), msg=msg)
 
     def assertInvalidCandidate(self, candidate: List[List[Any]], msg=None):  # noqa:N802
         """Assert that the given candidate does not pass validation against the template."""
-        self.assertFalse(validate(self.TEMPLATE, candidate), msg=msg)
+        self.assertFalse(self.validator.validate(candidate), msg=msg)
 
 
 class TestSimpleValidator(TableValidatorMixin):

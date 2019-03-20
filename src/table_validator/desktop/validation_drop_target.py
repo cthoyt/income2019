@@ -40,7 +40,7 @@ __all__ = [
 class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
 
-    def __init__(self, app,template_file,bottom,right):
+    def __init__(self, app,validator,bottom,right):
         # self.label_url = 0;
         super().__init__()
 
@@ -51,14 +51,11 @@ class ValidationDropTarget(QWidget):
         print(dir(self))
         self.initUI()
 
-        self.template = table_validator.parse_tsv(template_file)
+        self.validator = validator
 
         # taken from
         # https://www.iana.org/assignments/media-types/media-types.txt
         self.accepted_formats = ['text/uri-list']
-
-    def _validate_table(self, candidate) -> bool:
-        return table_validator.validate(self.template, candidate)
 
     def _big_geometry(self):
         w = 30
@@ -119,7 +116,7 @@ class ValidationDropTarget(QWidget):
 
         self.label_url.setText("File examined: %s" % urls[0].toString())
 
-        if self._validate_table(candidate):
+        if self.validator.validate(candidate):
             self.label_success.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
         else:
@@ -238,7 +235,7 @@ def main(template, verbose: bool):
     bottom = geometry.bottom()
     right = geometry.right()
 
-    drop_target = ValidationDropTarget(app,template,bottom,right)
+    drop_target = ValidationDropTarget(app,table_validator.TemplateValidator(template),bottom,right)
     drop_target.show()
     app.exec_()
 
