@@ -12,7 +12,7 @@ from flask_wtf.file import FileField
 from wtforms.fields import SubmitField
 from wtforms.validators import DataRequired
 
-from table_validator.api import parse_tsv, validate
+from table_validator.api import parse_tsv
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class MyForm(FlaskForm):
     def validate_table_template(self) -> bool:
         """Validate the file against the table template in the current app."""
         candidate = parse_tsv(self.candidate.data.stream.read().decode("utf-8").splitlines())
-        return current_app.config['table_validator'].validate(candidate)
+        return current_app.config['table_validator'](candidate)
 
 
 app = Flask(__name__)

@@ -22,9 +22,10 @@ http://zetcode.com/gui/pyqt5/dragdrop/
 
 import logging
 import urllib.request
+from typing import Type
 
 import click
-from PyQt5.QtCore import Qt,QRect, QPropertyAnimation
+from PyQt5.QtCore import QPropertyAnimation, QRect, Qt
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 import table_validator
@@ -40,18 +41,21 @@ __all__ = [
 class ValidationDropTarget(QWidget):
     """A Qt app that is a drop target and validates the file dropped."""
 
-    def __init__(self, app,validator,bottom,right):
-        # self.label_url = 0;
+    def __init__(self, app, validate, bottom, right):
+        self.label_url = QLabel()
+        self.label_success = QLabel()
+        self.label_instructions = QLabel()
+
+        # self.label_url = 0
         super().__init__()
 
-        self.app = app;
+        self.app = app
         self.bottom = bottom
         self.right = right
         self.setAcceptDrops(True)
-        print(dir(self))
         self.initUI()
 
-        self.validator = validator
+        self.validate = validate
 
         # taken from
         # https://www.iana.org/assignments/media-types/media-types.txt
@@ -68,18 +72,15 @@ class ValidationDropTarget(QWidget):
         big_x = self.right - big_w
         big_y = self.bottom - big_h
 
-        if(self.x() < x) and (self.y() < y):
-            print("""already big""")
+        if (self.x() < x) and (self.y() < y):
             return
-
 
         self.animation = QPropertyAnimation(self, b"geometry")
         self.animation.setDuration(250)
-        self.animation.setStartValue(QRect(x,y,w,h))
-        self.animation.setEndValue(QRect(big_x,big_y,big_w,big_h))
-        self.animation.start();
-        self.setFixedSize(big_w,big_h)
-
+        self.animation.setStartValue(QRect(x, y, w, h))
+        self.animation.setEndValue(QRect(big_x, big_y, big_w, big_h))
+        self.animation.start()
+        self.setFixedSize(big_w, big_h)
 
     def _small_geometry(self):
         w = 30
@@ -92,39 +93,48 @@ class ValidationDropTarget(QWidget):
         big_x = self.right - big_w
         big_y = self.bottom - big_h
 
-        if(self.x() == x) and (self.y() == y):
-            print("""already small""")
+        if (self.x() == x) and (self.y() == y):
             return
 
         self.animation = QPropertyAnimation(self, b"geometry")
         self.animation.setDuration(250)
-        self.animation.setStartValue(QRect(big_x,big_y,big_w,big_h))
-        self.animation.setEndValue(QRect(x,y,w,h))
-        self.animation.start();
-        self.setFixedSize(big_w,big_h)
+        self.animation.setStartValue(QRect(big_x, big_y, big_w, big_h))
+        self.animation.setEndValue(QRect(x, y, w, h))
+        self.animation.start()
+        self.setFixedSize(big_w, big_h)
+
+    @staticmethod
+    def preprocess_response(data):
+        return table_validator.parse_tsv(data.split("\n"))
 
     def dropEvent(self, e):  # noqa: N802
         """Handle file drop events."""
         logger.debug("Dropped!")
 
-
         urls = e.mimeData().urls()
         response = urllib.request.urlopen(urls[0].toString())  # noqa:S310
-        candidate = table_validator.parse_tsv(response.read().decode("UTF-8").split("\n"))
+        data = response.read().decode("UTF-8")
+        candidate = self.preprocess_response(data)
 
         logger.debug("Candidate %s" % candidate)
 
         self.label_url.setText("File examined: %s" % urls[0].toString())
 
-        if self.validator.validate(candidate):
+        if self.validate(candidate):
             self.label_success.setText(
-                '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">Validation succeeded!</span>')
+                '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">'
+                'Validation succeeded!'
+                '</span>'
+            )
         else:
             self.label_success.setText(
-                '<span style=" font-size:18pt; font-weight:600; color:#cc0000;">Your data surely is great, but...</span>')
+                '<span style=" font-size:18pt; font-weight:600; color:#cc0000;">'
+                'Your data surely is great, but...'
+                '</span>'
+            )
 
         logger.debug("dropped" % urls)
-        #self._small_geometry();
+        # self._small_geometry()
 
     def is_accepted(self, e):
         """Check a file based on its MIME type."""
@@ -138,20 +148,15 @@ class ValidationDropTarget(QWidget):
         else:
             e.ignore()
 
-
-
-
-
-    def enterEvent(self,e):
+    def enterEvent(self, e):
         self._big_geometry()
 
-    def leaveEvent(self,e):
-        self._small_geometry();
+    def leaveEvent(self, e):
+        self._small_geometry()
 
     def dragEnterEvent(self, e):  # noqa: N802
         """Decide if you can drop a given type of file in the drop zone."""
-
-        self._big_geometry();
+        self._big_geometry()
 
         logger.debug("enter")
         logger.debug(f'URLs: {e.mimeData().urls()}')
@@ -162,25 +167,19 @@ class ValidationDropTarget(QWidget):
         else:
             logger.debug("failed %s" % e.mimeData().formats())
 
-
     # initUI
     def initUI(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self._small_geometry()
         # https://stackoverflow.com/questions/18975734/how-can-i-find-the-screen-desktop-size-in-qt-so-i-can-display-a-desktop-notific
 
-
-
-        self.label_url = QLabel()
         self.label_url.setAlignment(Qt.AlignLeft)
-        self.label_url.setWordWrap(True);
+        self.label_url.setWordWrap(True)
         self.label_url.setText("Drop your files here:")
 
-        self.label_success = QLabel()
         self.label_success.setAlignment(Qt.AlignLeft)
         self.label_success.setText('<span style="color:#999999;">I did not yet analyze any file</span>')
 
-        self.label_instructions = QLabel()
         self.label_instructions.setAlignment(Qt.AlignLeft)
         self.label_instructions.setWordWrap(True)
         self.label_instructions.setText("""
@@ -210,12 +209,29 @@ class ValidationDropTarget(QWidget):
         vbox.addWidget(self.label_instructions)
         vbox.addStretch()
 
-
-
         self.setLayout(vbox)
 
         self.setWindowTitle('INCOME table Validation Drop Target')
-        #self.setGeometry(800, 500, 300, 400)
+        # self.setGeometry(800, 500, 300, 400)
+
+
+def run_with_validator(
+        validate,
+        cls: Type[ValidationDropTarget] = None,
+) -> None:
+    if cls is None:
+        cls = ValidationDropTarget
+
+    app = QApplication([])
+
+    desktop = app.desktop()
+    geometry = desktop.availableGeometry()
+    bottom = geometry.bottom()
+    right = geometry.right()
+
+    drop_target = cls(app, validate, bottom, right)
+    drop_target.show()
+    app.exec_()
 
 
 @click.command()
@@ -228,16 +244,8 @@ def main(template, verbose: bool):
         logger.setLevel(logging.DEBUG)
 
     click.echo(f'Building table validator with {template.name}')
-    app = QApplication([])
-
-    desktop = app.desktop();
-    geometry = desktop.availableGeometry()
-    bottom = geometry.bottom()
-    right = geometry.right()
-
-    drop_target = ValidationDropTarget(app,table_validator.TemplateValidator(template),bottom,right)
-    drop_target.show()
-    app.exec_()
+    validate = table_validator.TemplateValidator(template)
+    run_with_validator(validate)
 
 
 if __name__ == '__main__':

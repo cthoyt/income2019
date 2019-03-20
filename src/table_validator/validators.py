@@ -25,3 +25,6 @@ class TemplateValidator:
         if isinstance(candidate, list):
             return validate(self.template, candidate)
         return validate(self.template, parse_tsv(candidate))
+
+    def __call__(self, candidate: Union[list, TextIO]) -> bool:
+        return self.validate(candidate)

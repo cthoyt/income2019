@@ -19,8 +19,8 @@ __all__ = [
 @click.argument('candidate', type=click.File())
 def main(template: TextIO, candidate: TextIO):
     """Validate tables with other tables."""
-    validator = TemplateValidator(template)
-    if validator.validate(candidate):
+    validate = TemplateValidator(template)
+    if validate(candidate):
         click.secho('valid', fg='green', bold=True)
         sys.exit(0)
     else:

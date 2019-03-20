@@ -6,7 +6,7 @@ from typing import TextIO
 
 import click
 
-from table_validator.api import TemplateValidator
+from table_validator import TemplateValidator
 from table_validator.web.app import app
 
 __all__ = [
