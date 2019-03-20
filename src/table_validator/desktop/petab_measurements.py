@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MeasurementValidationDropTarget(ValidationDropTarget):
     @staticmethod
     def preprocess_response(data):
-        return pd.read_csv(io.StringIO(data))
+        return pd.read_csv(io.StringIO(data), sep='\t')
 
 
 def validate(df: pd.DataFrame) -> bool:
