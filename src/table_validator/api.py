@@ -98,7 +98,7 @@ int_validator = partial(type_validator, cls=int)
 float_validator = partial(type_validator, cls=float)
 
 
-def validate(template: List[List[Any]], candidate: List[List[Any]]) -> bool:
+def validate(template: List[List[Any]], candidate: List[List[Any]]) -> Tuple[bool,List[Any]]:
     """Validate a candidate using a given template."""
     rules, repeats = _consume_parsed_template(parse_template(template))
 
@@ -124,11 +124,11 @@ def validate(template: List[List[Any]], candidate: List[List[Any]]) -> bool:
 
             for validator in validators:
                 if not validator(candidate, current_row_index, current_column_index):
-                    return False
+                    return False,[]
 
             current_column_index += 1
         current_row_index += 1
-    return True
+    return True,[]
 
     # passed = True
     # row_offset = 0

@@ -120,7 +120,9 @@ class ValidationDropTarget(QWidget):
 
         self.label_url.setText("File examined: %s" % urls[0].toString())
 
-        if self.validate(candidate):
+        successfullyValidated,_ = self.validate(candidate)
+
+        if successfullyValidated:
             self.label_success.setText(
                 '<span style=" font-size:18pt; font-weight:600; color:#00aa00;">'
                 'Validation succeeded!'
