@@ -23,7 +23,68 @@ Validator = Callable[[List[List[Any]], int, int], bool]
 ValidatorTuple = Tuple[Validator, int, int]
 Rules = Iterable[Union[List[ValidatorTuple], str]]
 
+# What do we want to give back?
+# One possibility: A message.
+#       Advantage: simple
+#       Drawback: Difficult to base other work on
+#       My suggestion: Start with a message, change later
+# Compromise:
+# ErrorObject to create  a message
 
+class SheetError:
+    def __init__(self,row,column,value):
+        self.row = row;
+        self.column = column
+        self.value = value
+
+    def message(self):
+        return "%d, %d: %s" %(row,column,value)
+
+class TypeSheetError(SheetError):
+    def __init__(self,row,column,value,cls):
+        super(self,row,column,value)
+        self.cls = cls
+
+    def message(self):
+        return "%d, %d: %s should have been of type %s" %(row,column,value,cls)
+
+
+# base class
+class SheetValidator:
+
+    def __init__(self,row,column):
+            self.row = row
+            self.column = column
+    # the location this is responsible for in the sheet
+    def getLocation(self):
+        return self.row,self.column
+
+    # this does the actual validation
+    # this empty validator always succeeds
+    def validate(self,value):
+        return True,SheetError(row,column,value)
+
+class MandatorySheetValidator(SheetValidator):
+# TODO a non-null value must be present
+    def __init__(self,row,column):
+        super(self,row,column)
+
+    def validate(self):
+        return True;SheetError(row,column,value)
+
+
+class TypeSheetValidator(SheetValidator):
+# TODO an integer/float/string must be present
+    def something():
+        return 0
+
+class SmartChemicalCompoundSheetValidator(SheetValidator):
+# TODO checks that something is a compound
+    def somethingElse():
+        return 0
+
+
+# replace with parsers
 def parse_template(template) -> Rules:
     """Parse a template."""
     for i, row in enumerate(template):
@@ -42,6 +103,7 @@ def parse_template(template) -> Rules:
             command = cell[open_bracket + 1: close_bracket]
             print(f'{EMOJI} command at ({i}, {j}): {command}')
 
+            # TODO: here we have to create the right NEW validators
             if command.startswith('INT'):
                 yield [
                     (required_validator, i, j),
@@ -89,7 +151,7 @@ def type_validator(candidate: List[List[Any]], row: int, column: int, cls: type)
     try:
         cls(value)
     except ValueError:
-        return False
+        return False,ValidationErrorObject(row,column,"Wrong data type. Expected:", cls)
     else:
         return True
 
