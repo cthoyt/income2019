@@ -40,6 +40,8 @@ class SheetError:
     def message(self):
         return "%d, %d: %s" %(row,column,value)
 
+# TODO: Add classes for each validator
+
 class TypeSheetError(SheetError):
     def __init__(self,row,column,value,cls):
         super(self,row,column,value)
@@ -84,7 +86,7 @@ class SmartChemicalCompoundSheetValidator(SheetValidator):
         return 0
 
 
-# replace with parsers
+# TODO: Replace with objects
 def parse_template(template) -> Rules:
     """Parse a template."""
     for i, row in enumerate(template):
